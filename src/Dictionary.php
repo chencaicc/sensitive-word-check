@@ -40,7 +40,6 @@ class Dictionary implements DictionaryInterface, \Iterator
 
     /**
      * @param string /array $keyword
-     * @param object $otherObj 另一部字典[关键词不要出现在另一部字典里面，否则不可以添加]
      * @return bool
      * @throws 参数异常
      */
@@ -76,7 +75,6 @@ class Dictionary implements DictionaryInterface, \Iterator
 
     /**
      * @param string /array $keyword
-     * @param object $otherObj 另一部字典[关键词不要出现在另一部字典里面，否则不可以添加]
      * @return bool
      * @throws 参数异常
      */
