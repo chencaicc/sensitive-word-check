@@ -20,6 +20,12 @@ use Chencaicc\SensitiveWordCheck\Keyword;
 
 ```php
 
+
+$whitePath=__DIR__.'/db/white.db';
+$blackPath=__DIR__.'/db/black.db';
+$obj=new Keyword($blackPath,$whitePath);
+
+
 // 添加关键词到白名单
 $data=[
     '白词0',
