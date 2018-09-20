@@ -24,14 +24,19 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
     public $whiteListDictionary;
 
     /**
-     * @param string $blackWordPath 非法词文件路径
-     * @param string $whiteWordPath 合法词文件路径
      * @throws 文件权限异常、系统异常
      */
-    public function __construct($blackWordPath, $whiteWordPath)
+    public function __construct($initDirectory)
     {
-        $this->blackListDictionary = new Dictionary($blackWordPath);
-        $this->whiteListDictionary = new Dictionary($whiteWordPath);
+        if (!is_dir($initDirectory)) {
+            $isDir = @mkdir($initDirectory, 0777, true);
+            if (!isDir)
+                throw new \Exception('存放目录无法创建！');
+        }
+        $whiteListPath = $initDirectory . DIRECTORY_SEPARATOR . 'whitelist.txt';
+        $blackListPath = $initDirectory . DIRECTORY_SEPARATOR . 'blacklist.txt';
+        $this->blackListDictionary = new Dictionary($whiteListPath);
+        $this->whiteListDictionary = new Dictionary($blackListPath);
     }
 
     /**
@@ -40,12 +45,9 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
      */
     public function isValid($content)
     {
-        $check = true;//合法
         // 去掉白名单中的词
-        if(!empty($this->whiteListDictionary)){
+        if (!empty($this->whiteListDictionary))
             $content = str_replace($this->whiteListDictionary->getKeywords(), '', $content);
-        }
-
         foreach ($this->blackListDictionary->getKeywords() as $word) {
             //出现敏感词
             if (strpos($content, $word) !== false) {
@@ -53,7 +55,7 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
                 return false;
             }
         }
-        return $check;
+        return true;
     }
 
     /**
@@ -65,41 +67,51 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
     }
 
     /**
-     * @param string $keyword
+     * @param string|array $keyword
      * @throws 文件写入权限异常
      */
-    public function addWordToBlackList($keyword)
+    public function addToBlackList($keyword)
     {
-        if (!$this->whiteListDictionary->exist($keyword)) {
+        if (is_string($keyword))
             $this->blackListDictionary->add($keyword);
+        if (is_array($keyword)) {
+            foreach ($keyword as $word) {
+                if (!$this->whiteListDictionary->exist($word))
+                    $this->blackListDictionary->add($word);
+            }
         }
     }
 
     /**
-     * @param string $keyword
+     * @param string|array $keyword
      * @throws 文件写入权限异常，无异常表示操作成功
      */
-    public function deleteWordFromBlackList($keyword)
+    public function deleteFromBlackList($keyword)
     {
         $this->blackListDictionary->delete($keyword);
     }
 
     /**
-     * @param string $keyword
+     * @param string|array $keyword
      * @throws 文件写入权限异常
      */
-    public function addWordToWhiteList($keyword)
+    public function addToWhiteList($keyword)
     {
-        if (!$this->blackListDictionary->exist($keyword)) {
+        if (is_string($keyword))
             $this->whiteListDictionary->add($keyword);
+        if (is_array($keyword)) {
+            foreach ($keyword as $word) {
+                if (!$this->blackListDictionary->exist($word))
+                    $this->whiteListDictionary->add($word);
+            }
         }
     }
 
     /**
-     * @param string $keyword
+     * @param string|array $keyword
      * @throws 文件写入权限异常
      */
-    public function deleteWordFromWhiteList($keyword)
+    public function deleteFromWhiteList($keyword)
     {
         $this->whiteListDictionary->delete($keyword);
     }

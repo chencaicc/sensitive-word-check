@@ -15,28 +15,28 @@ interface SensitiveWordCheckerInterface
     public function isValid($content);
 
     /**
-     * @param string $keyword
+     * @param string|array $keyword
      * @throws Exception 异常表示失败
      */
-    public function addWordToBlackList($keyword);
+    public function addToBlackList($keyword);
 
     /**
-     * @param string $keyword
+     * @param string|array $keyword
      * @throws Exception 异常表示失败
      */
-    public function deleteWordFromBlackList($keyword);
+    public function deleteFromBlackList($keyword);
 
     /**
-     * @param string $keyword
+     * @param string|array $keyword
      * @throws Exception 异常表示失败
      */
-    public function addWordToWhiteList($keyword);
+    public function addToWhiteList($keyword);
 
     /**
-     * @param string $keyword
+     * @param string|array $keyword
      * @throws Exception 异常表示失败
      */
-    public function deleteWordFromWhiteList($keyword);
+    public function deleteFromWhiteList($keyword);
 
     /**
      * @return string

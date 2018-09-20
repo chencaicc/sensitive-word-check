@@ -20,10 +20,9 @@ require "vendor/autoload.php";
 ```php
 
 
-$whiteListPath=__DIR__.'/db/white.db';
-$blackListPath=__DIR__.'/db/black.db';
+$listDir = __DIR__;
 
-$obj=new \Chencaicc\SensitiveWordCheck\SensitiveWordChecker($blackListPath,$whiteListPath);
+$obj=new \Chencaicc\SensitiveWordCheck\SensitiveWordChecker($listDir);
 
 // 添加关键词到白名单
 $data=[
@@ -34,7 +33,7 @@ $data=[
     '白词4',
 ];
 try{
-    $obj->addWordToWhiteList($data);
+    $obj->addToWhiteList($data);
     echo '添加白名单成功<br>';
 }catch(\Exception $e){
     echo '添加黑名单失败：',$e->getMessage(),'<br/>';
@@ -47,7 +46,7 @@ $data=[
 ];
 
 try{
-    $obj->deleteWordFromWhiteList($data);
+    $obj->deleteFromWhiteList($data);
     echo '删除白名单成功<br>';
 }catch(\Exception $e){
     echo '删除白名单失败：',$e->getMessage(),'<br/>';
@@ -65,7 +64,7 @@ $data=[
     '黑词4',
 ];
 try{
-    $obj->addWordToBlackList($data);
+    $obj->addToBlackList($data);
     echo '添加黑名单成功<br>';
 }catch(\Exception $e){
     echo '删除黑名单失败：',$e->getMessage(),'<br/>';
@@ -78,7 +77,7 @@ $data=[
 ];
 
 try{
-    $obj->deleteWordFromBlackList($data);
+    $obj->deleteFromBlackList($data);
     echo '添加黑名单成功<br>';
 }catch(\Exception $e){
     echo '删除黑名单失败：',$e->getMessage(),'<br/>';
@@ -99,7 +98,7 @@ else
 
 
 // 在黑名单中出现的非法词，也出现在白名单中，表示内容合法
-$ok=$obj->addWordToWhiteList('黑词0加');
+$ok=$obj->addToWhiteList('黑词0加');
 $str = '黑词0加入白名单';
 $check = $obj->isValid($str);
 if(!$check)
@@ -108,6 +107,9 @@ if(!$check)
 }else{
     echo '语句中没有非法词';
 }
+
+
+
 
 
 
