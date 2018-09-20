@@ -19,10 +19,11 @@ require "vendor/autoload.php";
 
 ```php
 
-$whitePath=__DIR__.'/db/white.db';
-$blackPath=__DIR__.'/db/black.db';
 
-$obj=new \Chencaicc\SensitiveWordCheck\SensitiveWordChecker($blackPath,$whitePath);
+$whiteListPath=__DIR__.'/db/white.db';
+$blackListPath=__DIR__.'/db/black.db';
+
+$obj=new \Chencaicc\SensitiveWordCheck\SensitiveWordChecker($blackListPath,$whiteListPath);
 
 // 添加关键词到白名单
 $data=[
@@ -77,7 +78,7 @@ $data=[
 ];
 
 try{
-    $obj->deleteWordFormBlackList($data);
+    $obj->deleteWordFromBlackList($data);
     echo '添加黑名单成功<br>';
 }catch(\Exception $e){
     echo '删除黑名单失败：',$e->getMessage(),'<br/>';
@@ -89,7 +90,7 @@ try{
 $content = '出现黑词0，检测将出现非法！';
 $check = $obj->isValid($content);
 if(!$check)
-    echo '出现非法单词===>'.$obj->getIllegalWord().'<br>';
+    echo '出现非法单词===>'.$obj->getIllegalKeyword().'<br>';
 else
     echo '语句中没有非法词';
 
@@ -103,10 +104,15 @@ $str = '黑词0加入白名单';
 $check = $obj->isValid($str);
 if(!$check)
 {
-    echo '出现非法单词===>'.$obj->getIllegalWord().'<br>';
+    echo '出现非法单词===>'.$obj->getIllegalKeyword().'<br>';
 }else{
     echo '语句中没有非法词';
 }
+
+
+
+
+
 
 ```
 

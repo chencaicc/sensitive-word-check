@@ -11,17 +11,17 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
     /**
      * @param string 命中非法的单词
      */
-    private $illegalWord = '';
+    private $illegalKeyword = '';
 
     /**
      * @param Dictionary 非法词字典
      */
-    public $blackDictionary;
+    public $blackListDictionary;
 
     /**
      * @param Dictionary 合法词字典
      */
-    public $whiteDictionary;
+    public $whiteListDictionary;
 
     /**
      * @param string $blackWordPath 非法词文件路径
@@ -30,8 +30,8 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
      */
     public function __construct($blackWordPath, $whiteWordPath)
     {
-        $this->blackDictionary = new Dictionary($blackWordPath);
-        $this->whiteDictionary = new Dictionary($whiteWordPath);
+        $this->blackListDictionary = new Dictionary($blackWordPath);
+        $this->whiteListDictionary = new Dictionary($whiteWordPath);
     }
 
     /**
@@ -41,39 +41,16 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
     public function isValid($content)
     {
         $check = true;//合法
-        foreach ($this->blackDictionary->getKeywords() as $bword) {
-            // 命中黑名单
-            $start = strpos($content, $bword);//命中黑名单在内容中的位置
-            if ($start !== false) {
-                $this->illegalWord = $bword;
-                $check = false;//非法
-                foreach ($this->whiteDictionary->getKeywords() as $wword) {
-                    // $wword = $wword['word'];
-                    // 存在白词中可能合法的
-                    $pos = strpos($wword, $bword);//黑名单在白名单中命中的位置
-                    if ($pos !== false) {
-                        //计算截取的起始下标
-                        $subStart = $start - $pos;//截取位置
-                        // 非法
-                        if ($subStart < 0) {
-                            $check = false;
-                            // 可能合法
-                        } else {
-                            $sub = substr($content, $subStart, strlen($wword));
-                            if ($sub === $wword) {
-                                $this->illegalWord = null;
-                                $check = true;
-                                break;
-                            } else {
-                                $check = false;
-                            }
-                        }
-                    }
-                }
-                // 没通过白名单
-                if ($check === false) {
-                    break;
-                }
+        // 去掉白名单中的词
+        if(!empty($this->whiteListDictionary)){
+            $content = str_replace($this->whiteListDictionary->getKeywords(), '', $content);
+        }
+
+        foreach ($this->blackListDictionary->getKeywords() as $word) {
+            //出现敏感词
+            if (strpos($content, $word) !== false) {
+                $this->illegalKeyword = $word;
+                return false;
             }
         }
         return $check;
@@ -82,9 +59,9 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
     /**
      * @return string   检测到的非法词
      */
-    public function getIllegalWord()
+    public function getIllegalKeyword()
     {
-        return $this->illegalWord;
+        return $this->illegalKeyword;
     }
 
     /**
@@ -93,8 +70,8 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
      */
     public function addWordToBlackList($keyword)
     {
-        if (!$this->whiteDictionary->exist($keyword)) {
-            $this->blackDictionary->add($keyword);
+        if (!$this->whiteListDictionary->exist($keyword)) {
+            $this->blackListDictionary->add($keyword);
         }
     }
 
@@ -102,9 +79,9 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
      * @param string $keyword
      * @throws 文件写入权限异常，无异常表示操作成功
      */
-    public function deleteWordFormBlackList($keyword)
+    public function deleteWordFromBlackList($keyword)
     {
-        $this->blackDictionary->delete($keyword);
+        $this->blackListDictionary->delete($keyword);
     }
 
     /**
@@ -113,8 +90,8 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
      */
     public function addWordToWhiteList($keyword)
     {
-        if (!$this->blackDictionary->exist($keyword)) {
-            $this->whiteDictionary->add($keyword);
+        if (!$this->blackListDictionary->exist($keyword)) {
+            $this->whiteListDictionary->add($keyword);
         }
     }
 
@@ -124,6 +101,6 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
      */
     public function deleteWordFromWhiteList($keyword)
     {
-        $this->whiteDictionary->delete($keyword);
+        $this->whiteListDictionary->delete($keyword);
     }
 }

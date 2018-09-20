@@ -24,7 +24,7 @@ interface SensitiveWordCheckerInterface
      * @param string $keyword
      * @throws Exception 异常表示失败
      */
-    public function deleteWordFormBlackList($keyword);
+    public function deleteWordFromBlackList($keyword);
 
     /**
      * @param string $keyword
@@ -37,4 +37,9 @@ interface SensitiveWordCheckerInterface
      * @throws Exception 异常表示失败
      */
     public function deleteWordFromWhiteList($keyword);
+
+    /**
+     * @return string
+     */
+    public function getIllegalKeyword();
 }
