@@ -1,20 +1,34 @@
 <?php
+
 namespace Chencaicc\SensitiveWordCheck;
 
+/**
+ * Interface DictionaryInterface
+ * @package Chencaicc\SensitiveWordCheck
+ */
 interface DictionaryInterface
 {
 
     /**
-     * @param string /array $keyword
-     * @param object $otherObj 另一部字典[关键词不要出现在另一部字典里面，否则不可以添加]
-     * @return bool
+     * @param array|string $keyword
+     * @return mixed
      */
-    public function addKeyword($keyword);
+    public function add($keyword);
 
     /**
-     * @param string /array $keyword
+     * @param array|string $keyword
+     * @return mixed
+     */
+    public function delete($keyword);
+
+    /**
+     * @param string $keyword
      * @return bool
      */
-    public function deleteKeyword($keyword);
+    public function exist($keyword);
 
+    /**
+     * @return array
+     */
+    public function getKeywords();
 }

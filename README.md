@@ -1,4 +1,4 @@
-# sensitive-word-infalid #
+# sensitive-word-check #
 
 敏感词检测、添加关键词到黑白名单
 
@@ -12,7 +12,6 @@
 ```php
 <?php
 require "vendor/autoload.php";
-use Chencaicc\SensitiveWordCheck\Keyword;
 
 ```
 
@@ -20,11 +19,10 @@ use Chencaicc\SensitiveWordCheck\Keyword;
 
 ```php
 
-
 $whitePath=__DIR__.'/db/white.db';
 $blackPath=__DIR__.'/db/black.db';
-$obj=new Keyword($blackPath,$whitePath);
 
+$obj=new \Chencaicc\SensitiveWordCheck\SensitiveWordChecker($blackPath,$whitePath);
 
 // 添加关键词到白名单
 $data=[
@@ -34,16 +32,28 @@ $data=[
     '白词3',
     '白词4',
 ];
-$ok = $obj->addWhiteKeyword($data);
-var_dump($ok);
+try{
+    $obj->addWordToWhiteList($data);
+    echo '添加白名单成功<br>';
+}catch(\Exception $e){
+    echo '添加黑名单失败：',$e->getMessage(),'<br/>';
+}
 
 // 从白名单中删除关键词
 $data=[
     '白词1',
     '白词3',
 ];
-$ok = $obj->deleteWhiteKeyword($data);
-var_dump($ok);
+
+try{
+    $obj->deleteWordFromWhiteList($data);
+    echo '删除白名单成功<br>';
+}catch(\Exception $e){
+    echo '删除白名单失败：',$e->getMessage(),'<br/>';
+}
+
+
+
 
 // 添加关键词到黑名单
 $data=[
@@ -53,40 +63,49 @@ $data=[
     '黑词3',
     '黑词4',
 ];
-$ok = $obj->addBlackKeyword($data);
-var_dump($ok);
+try{
+    $obj->addWordToBlackList($data);
+    echo '添加黑名单成功<br>';
+}catch(\Exception $e){
+    echo '删除黑名单失败：',$e->getMessage(),'<br/>';
+}
 
 // 从黑名单中删除关键词
 $data=[
     '黑词2',
     '黑词3',
 ];
-$ok = $obj->deleteBlackKeyword($data);
-var_dump($ok);
 
-echo '<hr>';
+try{
+    $obj->deleteWordFormBlackList($data);
+    echo '添加黑名单成功<br>';
+}catch(\Exception $e){
+    echo '删除黑名单失败：',$e->getMessage(),'<br/>';
+}
 
-// 检测敏感词-------------start---------------------
-$str = '出现黑词0，检测将出现非法！';
-$check = $obj->validate($str);
+
+
+//在黑名单中出现的非法词
+$content = '出现黑词0，检测将出现非法！';
+$check = $obj->isValid($content);
 if(!$check)
     echo '出现非法单词===>'.$obj->getIllegalWord().'<br>';
 else
-    var_dump($check);
-// 检测敏感词-------------end---------------------
-echo '<hr>';
+    echo '语句中没有非法词';
 
 
-// 检测关键词在白名单中的示例
-$ok=$obj->addWhiteKeyword('黑词0加');
+
+
+
+// 在黑名单中出现的非法词，也出现在白名单中，表示内容合法
+$ok=$obj->addWordToWhiteList('黑词0加');
 $str = '黑词0加入白名单';
-$check = $obj->validate($str);
+$check = $obj->isValid($str);
 if(!$check)
 {
-    echo '非法==>'.$obj->getIllegalWord();
+    echo '出现非法单词===>'.$obj->getIllegalWord().'<br>';
 }else{
-    echo '合法';
-    var_dump($check);
+    echo '语句中没有非法词';
 }
 
 ```

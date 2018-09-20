@@ -1,197 +1,121 @@
 <?php
+/**
+ * Created by PhpStorm.
+ * User: nathan
+ * Date: 2018/9/20
+ * Time: 13:05
+ */
+
 namespace Chencaicc\SensitiveWordCheck;
 
-class Dictionary implements DictionaryInterface, \Iterator
+/**
+ * Class Dictionary
+ * @package Chencaicc\SensitiveWordCheck
+ */
+class Dictionary implements DictionaryInterface
 {
     /**
-     * @param array  反字典
+     * @var string
      */
-    public $backDictionary = [];
-
-    private $position = 0;
+    protected $file;
 
     /**
-     * @param bool
+     * @var array
      */
-    protected $needSave = false;
+    protected $keywords = [];
 
     /**
-     * @param array  字典数据
+     * @var bool
      */
-    protected $data = [];
+    protected $isChanged = false;
 
     /**
-     * @param string  字典文件路径
+     * Dictionary constructor.
+     * @param string $file
      */
-    private $filePath = null;
-
-    /**
-     * @param string $filePath 文件路径
-     * @throws 文件权限异常、系统异常
-     */
-    public function __construct($filePath)
+    public function __construct($file)
     {
-        if (!file_exists($filePath)) {
-            throw new \Exception("文件路径不存在！");
+        if (!file_exists($file)) {
+            touch($file);
         }
-        $this->filePath = $filePath;
-        $this->data = $this->getFileData($filePath);
+        $this->file = $file;
+        $content = trim(file_get_contents($this->file));
+        $this->keywords = $content ? explode("\n", $content) : [];
     }
 
     /**
-     * @param string /array $keyword
-     * @return bool
-     * @throws 参数异常
+     * @param array|string $keyword
+     * @return void
      */
-    public function addKeyword($keyword)
+    public function add($keyword)
     {
         if (is_string($keyword)) {
-            $keyword = trim($keyword);
-            if ($keyword == '') {
-                return false;
-            }
-            // 当前字典已经存在关键字
-            foreach ($this->data as $k => $v) {
-                if ($v['word'] === $keyword)
-                    return true;
-            }
-            // 在另一部字典里面
-            foreach ($this->backDictionary as $k => $v) {
-                if ($v['word'] === $keyword)
-                    return false;
-            }
-            $this->needSave = true;
-            $this->data[] = ['word' => $keyword, 'len' => mb_strlen($keyword)];
-            return true;
-        } elseif (is_array($keyword)) {
-            foreach ($keyword as $v) {
-                $ok = $this->addKeyword($v);
-            }
-            return $ok;
-        } else {
-            throw new Exception("不支持的数据类型");
+            $keyword = [$keyword];
         }
-    }
-
-    /**
-     * @param string /array $keyword
-     * @return bool
-     * @throws 参数异常
-     */
-    public function deleteKeyword($keyword)
-    {
-        if (is_string($keyword)) {
-            $keyword = trim($keyword);
-            if ($keyword == '') {
-                return false;
-            }
-            // 当前字典已经存在关键字
-            foreach ($this->data as $k => $v) {
-                if ($v['word'] === $keyword) {
-                    unset($this->data[$k]);
-                    $this->needSave = true;
-                    return true;
+        if (is_array($keyword)) {
+            foreach ($keyword as $value) {
+                if (!$this->exist($value)) {
+                    array_push($this->keywords, $value);
+                    $this->isChanged = true;
                 }
             }
-            // 不存在这个关键词，表示已经删除
-            return true;
-        } elseif (is_array($keyword)) {
-            foreach ($keyword as $v) {
-                $ok = $this->deleteKeyword($v);
+        }
+        $this->save();
+    }
+
+    /**
+     * @param array|string $keyword
+     * @return void
+     */
+    public function delete($keyword)
+    {
+        if (is_string($keyword)) {
+            $keyword = [$keyword];
+        }
+        if (is_array($keyword)) {
+            foreach ($keyword as $value) {
+                if ($this->exist($value)) {
+                    $index = array_search($value, $this->keywords);
+                    unset($this->keywords[$index]);
+                    $this->isChanged = true;
+                }
             }
-            return $ok;
-        } else {
-            throw new Exception("不支持的数据类型");
         }
+        $this->save();
     }
 
     /**
-     * 保存数据到文件
+     * @param string $keyword
+     * @return bool
      */
-    public function __destruct()
+    public function exist($keyword)
     {
-        // 如果操作了字典
-        if ($this->needSave) {
-            $this->saveData();
-        }
+        return in_array($keyword, $this->keywords);
     }
 
     /**
-     * 排序并保存文件
+     * @return array
      */
-    private function saveData()
+    public function getKeywords()
     {
-        $sortArr = array_column($this->data, 'len');
-        array_multisort($sortArr, SORT_ASC, $this->data);
-        $this->writeFile($this->filePath, $this->data);
+        return $this->keywords;
     }
 
     /**
-     * @param string $file 保存的文件路径
-     * @param array $data 保存的数据
-     * @throws 文件权限异常
+     * @return void
      */
-    private function writeFile($file, $data)
+    protected function save()
     {
-        $fp = fopen($file, 'w');
-        flock($fp, LOCK_EX);
-        foreach ($data as $v) {
-            $len = fwrite($fp, $v['word'] . "\r\n");
+        if ($this->isChanged) {
+            $this->keywords = array_filter($this->keywords, function ($keyword) {
+                return trim($keyword) != '';
+            });
+            usort($this->keywords, function ($a, $b) {
+                return mb_strlen($a) > mb_strlen($b);
+            });
+            file_put_contents($this->file, implode("\n", $this->keywords));
+            $this->isChanged = false;
         }
-        flock($fp, LOCK_UN);
-        fclose($fp);
-        return $len;
     }
 
-    /**
-     * @param string $filePath 保存的文件路径
-     * @param array  保存的数据
-     * @throws 文件权限异常
-     */
-    private function getFileData($filePath)
-    {
-        $data = [];
-        $fp = fopen($filePath, 'r+');
-        while (!feof($fp)) {
-            $word = trim(fgets($fp));
-            if ($word == '') {
-                continue;
-            }
-            $data[] = ['word' => $word, 'len' => mb_strlen($word)];
-        }
-        fclose($fp);
-        return $data;
-    }
-
-    public function rewind()
-    {
-        return $this->position = 0;
-    }
-
-    public function current()
-    {
-        return $this->data[$this->position];
-    }
-
-    public function key()
-    {
-        return $this->position;
-    }
-
-    public function next()
-    {
-        ++$this->position;
-    }
-
-    public function valid()
-    {
-        return isset($this->data[$this->position]);
-    }
-
-    public function add($value)
-    {
-        $this->data[] = $value;
-    }
 }
-
-
