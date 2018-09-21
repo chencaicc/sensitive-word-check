@@ -30,7 +30,7 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
     {
         if (!is_dir($initDirectory)) {
             $isDir = @mkdir($initDirectory, 0777, true);
-            if (!isDir)
+            if (!$isDir)
                 throw new \Exception('存放目录无法创建！');
         }
         $whiteListPath = $initDirectory . DIRECTORY_SEPARATOR . 'whitelist.txt';
