@@ -35,8 +35,8 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
         }
         $whiteListPath = $initDirectory . DIRECTORY_SEPARATOR . 'whitelist.txt';
         $blackListPath = $initDirectory . DIRECTORY_SEPARATOR . 'blacklist.txt';
-        $this->blackListDictionary = new Dictionary($whiteListPath);
-        $this->whiteListDictionary = new Dictionary($blackListPath);
+        $this->whiteListDictionary = new Dictionary($whiteListPath);
+        $this->blackListDictionary = new Dictionary($blackListPath);
     }
 
     /**
