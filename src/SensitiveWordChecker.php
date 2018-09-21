@@ -48,6 +48,7 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
         // 去掉白名单中的词
         if (!empty($this->whiteListDictionary))
             $content = str_replace($this->whiteListDictionary->getKeywords(), '', $content);
+        // 遍历黑名单
         foreach ($this->blackListDictionary->getKeywords() as $word) {
             //出现敏感词
             if (strpos($content, $word) !== false) {
@@ -72,13 +73,16 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
      */
     public function addToBlackList($keyword)
     {
-        if (is_string($keyword))
-            $this->blackListDictionary->add($keyword);
-        if (is_array($keyword)) {
-            foreach ($keyword as $word) {
-                if (!$this->whiteListDictionary->exist($word))
-                    $this->blackListDictionary->add($word);
+        if (is_string($keyword)) {
+            if (!$this->whiteListDictionary->exist($keyword)) {
+                $this->blackListDictionary->add($keyword);
             }
+        } elseif (is_array($keyword)) {
+            foreach ($keyword as $word) {
+                $this->addToBlackList($word);
+            }
+        } else {
+            throw new InvalidArgumentException("非法入参！");
         }
     }
 
@@ -88,6 +92,9 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
      */
     public function deleteFromBlackList($keyword)
     {
+        if (!is_string($keyword) && !is_array($keyword)) {
+            throw new InvalidArgumentException("非法入参！");
+        }
         $this->blackListDictionary->delete($keyword);
     }
 
@@ -97,13 +104,16 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
      */
     public function addToWhiteList($keyword)
     {
-        if (is_string($keyword))
-            $this->whiteListDictionary->add($keyword);
-        if (is_array($keyword)) {
-            foreach ($keyword as $word) {
-                if (!$this->blackListDictionary->exist($word))
-                    $this->whiteListDictionary->add($word);
+        if (is_string($keyword)) {
+            if (!$this->blackListDictionary->exist($keyword)) {
+                $this->whiteListDictionary->add($keyword);
             }
+        } elseif (is_array($keyword)) {
+            foreach ($keyword as $word) {
+                $this->addToWhiteList($word);
+            }
+        } else {
+            throw new InvalidArgumentException("非法入参！");
         }
     }
 
@@ -113,6 +123,9 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
      */
     public function deleteFromWhiteList($keyword)
     {
+        if (!is_string($keyword) && !is_array($keyword)) {
+            throw new InvalidArgumentException("非法入参！");
+        }
         $this->whiteListDictionary->delete($keyword);
     }
 }
