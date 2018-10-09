@@ -74,12 +74,14 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
     public function addToBlackList($keyword)
     {
         if (is_string($keyword)) {
-            if (!$this->whiteListDictionary->exist($keyword)) {
-                //如果在字典中则抛异常
-                if ($this->blackListDictionary->exist($keyword))
-                    throw new InvalidArgumentException("关键词已经存在！");
-                $this->blackListDictionary->add($keyword);
+            //如果在字典中则抛异常
+            if ($this->whiteListDictionary->exist($keyword)) {
+                throw new InvalidArgumentException("{$keyword} 在白名单中已经存在！");
             }
+            if ($this->blackListDictionary->exist($keyword)) {
+                throw new InvalidArgumentException("{$keyword} 在黑名单中已经存在！");
+            }
+            $this->blackListDictionary->add($keyword);
         } elseif (is_array($keyword)) {
             foreach ($keyword as $word) {
                 $this->addToBlackList($word);
@@ -108,12 +110,14 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
     public function addToWhiteList($keyword)
     {
         if (is_string($keyword)) {
-            if (!$this->blackListDictionary->exist($keyword)) {
-                //如果在字典中则抛异常
-                if ($this->whiteListDictionary->exist($keyword))
-                    throw new InvalidArgumentException("关键词已经存在！");
-                $this->whiteListDictionary->add($keyword);
+            //如果在字典中则抛异常
+            if ($this->whiteListDictionary->exist($keyword)) {
+                throw new InvalidArgumentException("$keyword} 在白名单中已经存在！");
             }
+            if ($this->blackListDictionary->exist($keyword)) {
+                throw new InvalidArgumentException("{$keyword} 在黑名单中已经存在！");
+            }
+            $this->whiteListDictionary->add($keyword);
         } elseif (is_array($keyword)) {
             foreach ($keyword as $word) {
                 $this->addToWhiteList($word);
