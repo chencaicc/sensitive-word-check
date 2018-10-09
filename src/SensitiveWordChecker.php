@@ -46,7 +46,7 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
     public function isValid($content)
     {
         // 去掉白名单中的词
-        if (!empty($this->whiteListDictionary))
+        if (!empty($this->whiteListDictionary->getKeywords()))
             $content = str_replace($this->whiteListDictionary->getKeywords(), '', $content);
         // 遍历黑名单
         foreach ($this->blackListDictionary->getKeywords() as $word) {
@@ -75,6 +75,9 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
     {
         if (is_string($keyword)) {
             if (!$this->whiteListDictionary->exist($keyword)) {
+                //如果在字典中则抛异常
+                if ($this->blackListDictionary->exist($keyword))
+                    throw new InvalidArgumentException("关键词已经存在！");
                 $this->blackListDictionary->add($keyword);
             }
         } elseif (is_array($keyword)) {
@@ -106,6 +109,9 @@ class SensitiveWordChecker implements SensitiveWordCheckerInterface
     {
         if (is_string($keyword)) {
             if (!$this->blackListDictionary->exist($keyword)) {
+                //如果在字典中则抛异常
+                if ($this->whiteListDictionary->exist($keyword))
+                    throw new InvalidArgumentException("关键词已经存在！");
                 $this->whiteListDictionary->add($keyword);
             }
         } elseif (is_array($keyword)) {

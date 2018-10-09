@@ -31,4 +31,10 @@ interface DictionaryInterface
      * @return array
      */
     public function getKeywords();
+
+    /**
+     * @param string $keyword
+     * @return int
+     */
+    public function countKeyword($keyword);
 }

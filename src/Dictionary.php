@@ -22,12 +22,17 @@ class Dictionary implements DictionaryInterface
     /**
      * @var array
      */
-    protected $keywords = [];
+    private $_keywords = [];
+
+    /**
+     * @var array
+     */
+    private $keywords = [];
 
     /**
      * @var bool
      */
-    protected $isChanged = false;
+    private $isChanged = false;
 
     /**
      * Dictionary constructor.
@@ -39,8 +44,15 @@ class Dictionary implements DictionaryInterface
             touch($file);
         }
         $this->file = $file;
-        $content = trim(file_get_contents($this->file));
-        $this->keywords = $content ? explode("\n", $content) : [];
+        $fp = fopen($this->file, 'r');
+        while (!feof($fp)) {
+            $keyword = trim(fgets($fp));
+            if ($keyword == '')
+                continue;
+            $this->_keywords[] = ['w' => $keyword, 'l' => $this->countKeyword($keyword)];
+            $this->keywords[] = $keyword;
+        }
+        fclose($fp);
     }
 
     /**
@@ -55,7 +67,7 @@ class Dictionary implements DictionaryInterface
         if (is_array($keyword)) {
             foreach ($keyword as $value) {
                 if (!$this->exist($value)) {
-                    array_push($this->keywords, $value);
+                    array_push($this->_keywords, ['w' => $value, 'l' => $this->countKeyword($value)]);
                     $this->isChanged = true;
                 }
             }
@@ -73,11 +85,13 @@ class Dictionary implements DictionaryInterface
             $keyword = [$keyword];
         }
         if (is_array($keyword)) {
-            foreach ($keyword as $value) {
-                if ($this->exist($value)) {
-                    $index = array_search($value, $this->keywords);
-                    unset($this->keywords[$index]);
-                    $this->isChanged = true;
+            foreach ($keyword as $word) {
+                foreach ($this->_keywords as $k => $v) {
+                    if (strcasecmp($v['w'], $word) === 0) {
+                        unset($this->_keywords[$k]);
+                        $this->isChanged = true;
+                        break;
+                    }
                 }
             }
         }
@@ -90,7 +104,14 @@ class Dictionary implements DictionaryInterface
      */
     public function exist($keyword)
     {
-        return in_array($keyword, $this->keywords);
+        $have = false;
+        foreach ($this->_keywords as $v) {
+            if (strcasecmp($v['w'], $keyword) === 0) {
+                $have = true;
+                break;
+            }
+        }
+        return $have;
     }
 
     /**
@@ -107,15 +128,29 @@ class Dictionary implements DictionaryInterface
     protected function save()
     {
         if ($this->isChanged) {
-            $this->keywords = array_filter($this->keywords, function ($keyword) {
-                return trim($keyword) != '';
+            $this->_keywords = array_filter($this->_keywords, function ($keyword) {
+                return trim($keyword['w']) != '';
             });
-            usort($this->keywords, function ($a, $b) {
-                return mb_strlen($a) > mb_strlen($b);
-            });
-            file_put_contents($this->file, implode("\n", $this->keywords));
+            $column = array_column($this->_keywords, 'l');
+            array_multisort($column, SORT_ASC, $this->_keywords);
+            $this->keywords = array_map('current', $this->_keywords);
+            $fp = fopen($this->file, 'w');
+            flock($fp, LOCK_EX);
+            foreach ($this->_keywords as $v)
+                $len = fwrite($fp, $v['w'] . "\n");
+            flock($fp, LOCK_UN);
+            fclose($fp);
             $this->isChanged = false;
         }
+    }
+
+    /**
+     * @param string $keyword
+     * @return int
+     */
+    public function countKeyword($keyword)
+    {
+        return mb_strlen($keyword);
     }
 
 }
